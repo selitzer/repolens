@@ -5,6 +5,16 @@ import { resolveProjectPath, scanProject } from "../utils/readProject.js";
 import { calculateHealthScore } from "../utils/projectHealth.js";
 import { formatJsonReport, formatMarkdownReport } from "../utils/reportFormatter.js";
 import {
+  formatHealthScore,
+  pluralize,
+  printBullet,
+  printConfigurationStatus,
+  printHealthStatusLine,
+  printReportTitle,
+  printSection,
+  printStatusLine,
+} from "../utils/terminalReport.js";
+import {
   formatReportLine,
   startSpinner,
   symbols,
@@ -18,46 +28,6 @@ type AnalyzeOptions = {
   markdown?: boolean;
   output?: string;
 };
-
-function pluralize(count: number, singular: string, plural = `${singular}s`) {
-  return count === 1 ? singular : plural;
-}
-
-function printSection(title: string) {
-  console.log("");
-  console.log(formatReportLine(terminalColors.heading(title)));
-}
-
-function printBullet(text: string) {
-  console.log(formatReportLine(`${terminalColors.muted(symbols.bullet)} ${text}`, 1));
-}
-
-function printStatusLine(isSuccess: boolean, text: string) {
-  const color = isSuccess ? terminalColors.success : terminalColors.warning;
-  const symbol = isSuccess ? symbols.success : symbols.warning;
-
-  console.log(formatReportLine(`${color(symbol)} ${text}`, 1));
-}
-
-function printHealthStatusLine(isFound: boolean, name: string) {
-  const color = isFound ? terminalColors.success : terminalColors.warning;
-  const symbol = isFound ? symbols.success : symbols.warning;
-  const status = isFound ? "Found" : "Missing";
-
-  console.log(formatReportLine(`${color(symbol)} ${name}: ${color(status)}`, 1));
-}
-
-function formatHealthScore(score: number) {
-  if (score >= 80) {
-    return terminalColors.success(`${score}%`);
-  }
-
-  if (score >= 60) {
-    return terminalColors.warning(`${score}%`);
-  }
-
-  return terminalColors.danger(`${score}%`);
-}
 
 function printSaveSuccess(formatLabel: "JSON" | "Markdown", outputPath: string) {
   console.log(formatReportLine(chalk.bold("RepoLens")));
@@ -110,8 +80,7 @@ export function registerAnalyzeCommand(program: Command) {
           return;
         }
 
-        console.log(formatReportLine(chalk.bold("RepoLens Report")));
-        console.log(formatReportLine(terminalColors.muted("────────────────")));
+        printReportTitle("RepoLens Report");
         console.log(formatReportLine(`${terminalColors.muted("Project:")} ${result.projectPath}`));
 
         printSection("Health Score");
@@ -125,11 +94,7 @@ export function registerAnalyzeCommand(program: Command) {
         );
 
         printSection("Configuration");
-        if (result.config.configFileFound) {
-          printHealthStatusLine(true, result.config.configFileName);
-        } else {
-          printStatusLine(false, `${result.config.configFileName}: Not found, using defaults`);
-        }
+        printConfigurationStatus(result.config.configFileFound, result.config.configFileName);
 
         printSection("Language Breakdown");
         for (const item of result.languageBreakdown) {
