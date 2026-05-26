@@ -1,7 +1,9 @@
+import fs from "node:fs";
 import type { Command } from "commander";
 import chalk from "chalk";
 import { resolveProjectPath, scanProject } from "../utils/readProject.js";
 import { calculateHealthScore } from "../utils/projectHealth.js";
+import { formatJsonReport, formatMarkdownReport } from "../utils/reportFormatter.js";
 import {
   formatReportLine,
   startSpinner,
@@ -10,6 +12,12 @@ import {
 } from "../utils/terminal.js";
 
 const RESULT_PREVIEW_LIMIT = 10;
+
+type AnalyzeOptions = {
+  json?: boolean;
+  markdown?: boolean;
+  output?: string;
+};
 
 function pluralize(count: number, singular: string, plural = `${singular}s`) {
   return count === 1 ? singular : plural;
@@ -51,13 +59,33 @@ function formatHealthScore(score: number) {
   return terminalColors.danger(`${score}%`);
 }
 
+function printSaveSuccess(formatLabel: "JSON" | "Markdown", outputPath: string) {
+  console.log(formatReportLine(chalk.bold("RepoLens")));
+  console.log(formatReportLine(terminalColors.muted("────────")));
+  console.log(
+    formatReportLine(
+      `${terminalColors.success(symbols.success)} ${formatLabel} report saved to ${outputPath}`,
+      1,
+    ),
+  );
+}
+
 export function registerAnalyzeCommand(program: Command) {
   program
     .command("analyze")
     .description("Analyze a local project folder.")
     .argument("[path]", "Path to the project folder", ".")
-    .action((path) => {
-      const spinner = startSpinner("Analyzing project...");
+    .option("--json", "Print the report as JSON.")
+    .option("--markdown", "Print the report as Markdown.")
+    .option("--output <file>", "Save the report to a file.")
+    .action((path, options: AnalyzeOptions) => {
+      if (options.json && options.markdown) {
+        console.error(chalk.red("Error: Use either --json or --markdown, not both."));
+        process.exit(1);
+      }
+
+      const isExporting = Boolean(options.json || options.markdown || options.output);
+      const spinner = startSpinner("Analyzing project...", !isExporting);
 
       try {
         const projectPath = resolveProjectPath(path);
@@ -65,6 +93,22 @@ export function registerAnalyzeCommand(program: Command) {
         const healthScore = calculateHealthScore(result.projectHealth);
 
         spinner.stop();
+
+        if (isExporting) {
+          const formatLabel = options.json ? "JSON" : "Markdown";
+          const reportContent = options.json
+            ? formatJsonReport(result)
+            : formatMarkdownReport(result);
+
+          if (options.output) {
+            fs.writeFileSync(options.output, reportContent, "utf-8");
+            printSaveSuccess(formatLabel, options.output);
+          } else {
+            console.log(reportContent);
+          }
+
+          return;
+        }
 
         console.log(formatReportLine(chalk.bold("RepoLens Report")));
         console.log(formatReportLine(terminalColors.muted("────────────────")));
