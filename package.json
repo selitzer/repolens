@@ -41,6 +41,7 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "demo.gif"
   ]
 }
