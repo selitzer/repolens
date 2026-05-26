@@ -1,8 +1,8 @@
-cat > .gitignore << 'EOF'
 node_modules
 dist
 .env
 .env.local
 .DS_Store
 *.log
-EOF
+report.md
+report.json
