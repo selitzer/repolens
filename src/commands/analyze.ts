@@ -35,6 +35,15 @@ export function registerAnalyzeCommand(program: Command) {
           console.log(`- ${item.language}: ${item.files} ${pluralize(item.files, "file")}`);
         }
         console.log("");
+        console.log(chalk.bold("Detected Stack:"));
+        if (result.detectedStack.length === 0) {
+          console.log("- No known technologies detected");
+        } else {
+          for (const technology of result.detectedStack) {
+            console.log(`- ${technology}`);
+          }
+        }
+        console.log("");
         console.log(chalk.bold("Code Quality:"));
         console.log(`- TODO/FIXME Comments: ${result.todos.length}`);
         for (const todo of result.todos.slice(0, RESULT_PREVIEW_LIMIT)) {

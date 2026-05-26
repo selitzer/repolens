@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { checkProjectHealth } from "./projectHealth.js";
+import { detectStack } from "./stackDetector.js";
 import type { ProjectHealthResult } from "./projectHealth.js";
 
 const IGNORED_DIRECTORIES = new Set([
@@ -55,6 +56,7 @@ export type ProjectScanResult = {
   todos: TodoResult[];
   largeFiles: LargeFileResult[];
   projectHealth: ProjectHealthResult;
+  detectedStack: string[];
 };
 
 export function resolveProjectPath(inputPath: string): string {
@@ -164,5 +166,6 @@ export function scanProject(projectPath: string): ProjectScanResult {
     todos,
     largeFiles,
     projectHealth: checkProjectHealth(projectPath),
+    detectedStack: detectStack(projectPath),
   };
 }
