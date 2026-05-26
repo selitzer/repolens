@@ -1,0 +1,40 @@
+{
+  "name": "repolens",
+  "version": "1.0.0",
+  "description": "A terminal-based developer tool that scans codebases and generates project health reports.",
+  "type": "module",
+  "bin": {
+    "repolens": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/selitzer/repolens.git"
+  },
+  "keywords": [
+    "cli",
+    "developer-tools",
+    "repository-analysis",
+    "typescript",
+    "code-quality"
+  ],
+  "author": "Daniel Selitzer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/selitzer/repolens/issues"
+  },
+  "homepage": "https://github.com/selitzer/repolens#readme",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  }
+}
