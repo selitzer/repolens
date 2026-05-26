@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { checkProjectHealth } from "./projectHealth.js";
+import type { ProjectHealthResult } from "./projectHealth.js";
 
 const IGNORED_DIRECTORIES = new Set([
   "node_modules",
@@ -52,6 +54,7 @@ export type ProjectScanResult = {
   languageBreakdown: LanguageBreakdown[];
   todos: TodoResult[];
   largeFiles: LargeFileResult[];
+  projectHealth: ProjectHealthResult;
 };
 
 export function resolveProjectPath(inputPath: string): string {
@@ -160,5 +163,6 @@ export function scanProject(projectPath: string): ProjectScanResult {
     languageBreakdown,
     todos,
     largeFiles,
+    projectHealth: checkProjectHealth(projectPath),
   };
 }

@@ -8,6 +8,10 @@ function pluralize(count: number, singular: string, plural = `${singular}s`) {
   return count === 1 ? singular : plural;
 }
 
+function formatStatus(found: boolean) {
+  return found ? chalk.green("Found") : chalk.yellow("Missing");
+}
+
 export function registerAnalyzeCommand(program: Command) {
   program
     .command("analyze")
@@ -43,6 +47,30 @@ export function registerAnalyzeCommand(program: Command) {
         );
         for (const file of result.largeFiles.slice(0, RESULT_PREVIEW_LIMIT)) {
           console.log(`  - ${file.filePath}: ${file.lineCount} lines`);
+        }
+        console.log("");
+        console.log(chalk.bold("Project Health:"));
+        for (const check of result.projectHealth.importantFiles) {
+          console.log(`- ${check.name}: ${formatStatus(check.found)}`);
+        }
+        console.log("");
+        console.log(chalk.bold("README Quality:"));
+        if (result.projectHealth.readmeQuality.length === 0) {
+          console.log("- README.md: Missing");
+        } else {
+          for (const check of result.projectHealth.readmeQuality) {
+            console.log(`- ${check.name}: ${formatStatus(check.found)}`);
+          }
+        }
+        console.log("");
+        console.log(chalk.bold(".gitignore Checks:"));
+        for (const check of result.projectHealth.gitignoreChecks) {
+          console.log(`- ${check.name}: ${formatStatus(check.found)}`);
+        }
+        console.log("");
+        console.log(chalk.bold("package.json Metadata:"));
+        for (const check of result.projectHealth.packageJsonMetadata) {
+          console.log(`- ${check.name}: ${formatStatus(check.found)}`);
         }
       } catch (error) {
         if (error instanceof Error) {
