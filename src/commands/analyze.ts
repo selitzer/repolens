@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import chalk from "chalk";
-import { resolveProjectPath } from "../utils/readProject.js";
+import { resolveProjectPath, scanProject } from "../utils/readProject.js";
 
 export function registerAnalyzeCommand(program: Command) {
   program
@@ -10,10 +10,14 @@ export function registerAnalyzeCommand(program: Command) {
     .action((path) => {
       try {
         const projectPath = resolveProjectPath(path);
+        const result = scanProject(projectPath);
 
         console.log(chalk.bold("RepoLens Report"));
         console.log("----------------");
-        console.log(`Analyzing project at: ${projectPath}`);
+        console.log(`Analyzing project at: ${result.projectPath}`);
+        console.log("");
+        console.log(`Files: ${result.totalFiles}`);
+        console.log(`Folders: ${result.totalFolders}`);
       } catch (error) {
         if (error instanceof Error) {
           console.error(chalk.red(`Error: ${error.message}`));
