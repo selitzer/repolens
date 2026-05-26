@@ -76,6 +76,12 @@ export type ProjectHealthResult = {
   packageJsonMetadata: HealthCheckResult[];
 };
 
+export type HealthScore = {
+  passingChecks: number;
+  totalChecks: number;
+  score: number;
+};
+
 function fileExists(projectPath: string, fileName: string) {
   return fs.existsSync(path.join(projectPath, fileName));
 }
@@ -157,5 +163,30 @@ export function checkProjectHealth(projectPath: string): ProjectHealthResult {
     readmeQuality: checkReadmeQuality(projectPath),
     gitignoreChecks: checkGitignore(projectPath),
     packageJsonMetadata: checkPackageJsonMetadata(projectPath),
+  };
+}
+
+export function calculateHealthScore(projectHealth: ProjectHealthResult): HealthScore {
+  const checks = [
+    ...projectHealth.importantFiles,
+    ...projectHealth.readmeQuality,
+    ...projectHealth.gitignoreChecks,
+    ...projectHealth.packageJsonMetadata,
+  ];
+
+  if (checks.length === 0) {
+    return {
+      passingChecks: 0,
+      totalChecks: 0,
+      score: 0,
+    };
+  }
+
+  const passingChecks = checks.filter((check) => check.found).length;
+
+  return {
+    passingChecks,
+    totalChecks: checks.length,
+    score: Math.round((passingChecks / checks.length) * 100),
   };
 }
