@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const CONFIG_FILE_NAME = ".repolensrc.json";
+export const CONFIG_FILE_NAME = ".repolensrc.json";
 
 export type RepoLensConfig = {
   largeFileThreshold: number;
