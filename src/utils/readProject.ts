@@ -12,6 +12,7 @@ export type ProjectScanResult = {
   projectPath: string;
   totalFiles: number;
   totalFolders: number;
+  totalLines: number;
 };
 
 export function resolveProjectPath(inputPath: string): string {
@@ -33,6 +34,7 @@ export function resolveProjectPath(inputPath: string): string {
 export function scanProject(projectPath: string): ProjectScanResult {
   let totalFiles = 0;
   let totalFolders = 0;
+  let totalLines = 0;
 
   function walkDirectory(currentPath: string) {
     const entries = fs.readdirSync(currentPath, { withFileTypes: true });
@@ -52,6 +54,10 @@ export function scanProject(projectPath: string): ProjectScanResult {
 
       if (entry.isFile()) {
         totalFiles++;
+
+        const content = fs.readFileSync(entryPath, "utf-8");
+        const lineCount = content.split(/\r?\n/).length;
+        totalLines += lineCount;
       }
     }
   }
@@ -62,5 +68,6 @@ export function scanProject(projectPath: string): ProjectScanResult {
     projectPath,
     totalFiles,
     totalFolders,
+    totalLines,
   };
 }

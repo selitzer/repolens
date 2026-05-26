@@ -18,6 +18,7 @@ export function registerAnalyzeCommand(program: Command) {
         console.log("");
         console.log(`Files: ${result.totalFiles}`);
         console.log(`Folders: ${result.totalFolders}`);
+        console.log(`Lines of Code: ${result.totalLines}`);
       } catch (error) {
         if (error instanceof Error) {
           console.error(chalk.red(`Error: ${error.message}`));
