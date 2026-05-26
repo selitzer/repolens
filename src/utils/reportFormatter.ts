@@ -68,6 +68,15 @@ export function formatMarkdownReport(result: ProjectScanResult) {
 
   lines.push(
     "",
+    "## Project Structure",
+    "",
+    "```txt",
+    ...result.projectStructure,
+    "```",
+  );
+
+  lines.push(
+    "",
     "## Code Quality",
     "",
     "| Check | Result |",

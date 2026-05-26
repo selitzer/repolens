@@ -140,6 +140,11 @@ export function registerAnalyzeCommand(program: Command) {
           }
         }
 
+        printSection("Project Structure");
+        for (const line of result.projectStructure) {
+          console.log(formatReportLine(line, 1));
+        }
+
         printSection("Code Quality");
         printStatusLine(
           result.todos.length === 0,

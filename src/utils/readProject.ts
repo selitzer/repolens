@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { checkProjectHealth } from "./projectHealth.js";
+import { buildProjectStructure } from "./projectStructure.js";
 import { detectStack } from "./stackDetector.js";
 import type { ProjectHealthResult } from "./projectHealth.js";
 
@@ -57,6 +58,7 @@ export type ProjectScanResult = {
   largeFiles: LargeFileResult[];
   projectHealth: ProjectHealthResult;
   detectedStack: string[];
+  projectStructure: string[];
 };
 
 export function resolveProjectPath(inputPath: string): string {
@@ -167,5 +169,6 @@ export function scanProject(projectPath: string): ProjectScanResult {
     largeFiles,
     projectHealth: checkProjectHealth(projectPath),
     detectedStack: detectStack(projectPath),
+    projectStructure: buildProjectStructure(projectPath),
   };
 }
