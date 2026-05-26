@@ -4,7 +4,7 @@
   "description": "A terminal-based developer tool that scans codebases and generates project health reports.",
   "type": "module",
   "bin": {
-    "repolens": "./dist/index.js"
+    "repolens": "dist/index.js"
   },
   "scripts": {
     "dev": "tsx src/index.ts",
@@ -41,7 +41,6 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
-    "demo.gif"
+    "LICENSE"
   ]
 }
