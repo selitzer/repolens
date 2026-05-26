@@ -36,6 +36,9 @@ export function formatJsonReport(result: ReportResult) {
 
 export function formatMarkdownReport(result: ReportResult) {
   const healthScore = calculateHealthScore(result.projectHealth);
+  const repositoryUrl = result.source?.type === "github" ? result.source.repositoryUrl : undefined;
+  const isGitHubReport = Boolean(repositoryUrl);
+  const sourceLabel = result.source?.label ?? "Local folder";
   const lines: string[] = [
     "# RepoLens Report",
     "",
@@ -45,15 +48,15 @@ export function formatMarkdownReport(result: ReportResult) {
     "",
     "| Metric | Value |",
     "|---|---:|",
-    `| Project | ${formatInlineCode(result.projectPath)} |`,
-    `| Source | ${result.source?.label ?? "Local folder"} |`,
-    ...(result.source?.repositoryUrl
-      ? [`| Repository | ${formatInlineCode(result.source.repositoryUrl)} |`]
-      : []),
+    ...(repositoryUrl
+      ? [`| Repository | ${formatInlineCode(repositoryUrl)} |`]
+      : [`| Project | ${formatInlineCode(result.projectPath)} |`]),
+    `| Source | ${sourceLabel} |`,
     `| Health Score | **${healthScore.score}%** |`,
     `| Files | ${result.totalFiles} |`,
     `| Folders | ${result.totalFolders} |`,
     `| Lines of Code | ${result.totalLines} |`,
+    ...(isGitHubReport ? ["", "> Analyzed from a temporary local clone."] : []),
     "",
     "## Configuration",
     "",
