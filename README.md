@@ -56,7 +56,7 @@ RepoLens helps developers quickly understand a project’s structure, tech stack
 ### Install from npm
 
 ```bash
-npm install -g repolens
+npm install -g repolens-cli
 ```
 
 After installing globally, you can run RepoLens from anywhere:
@@ -68,7 +68,7 @@ repolens analyze .
 You can also run it without installing globally:
 
 ```bash
-npx repolens analyze .
+npx repolens-cli analyze .
 ```
 
 ### Install from GitHub
