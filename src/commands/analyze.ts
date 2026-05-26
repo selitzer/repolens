@@ -1,9 +1,15 @@
 import fs from "node:fs";
 import type { Command } from "commander";
 import chalk from "chalk";
-import { resolveProjectPath, scanProject } from "../utils/readProject.js";
+import { scanProject } from "../utils/readProject.js";
 import { calculateHealthScore } from "../utils/projectHealth.js";
 import { formatJsonReport, formatMarkdownReport } from "../utils/reportFormatter.js";
+import {
+  createGitHubSource,
+  createLocalSource,
+  isGitHubRepositoryUrl,
+} from "../utils/repositorySource.js";
+import type { AnalyzeSource } from "../utils/repositorySource.js";
 import {
   formatHealthScore,
   pluralize,
@@ -43,8 +49,8 @@ function printSaveSuccess(formatLabel: "JSON" | "Markdown", outputPath: string) 
 export function registerAnalyzeCommand(program: Command) {
   program
     .command("analyze")
-    .description("Analyze a local project folder.")
-    .argument("[path]", "Path to the project folder", ".")
+    .description("Analyze a local project folder or public GitHub repository.")
+    .argument("[path]", "Path to the project folder or GitHub repository URL", ".")
     .option("--json", "Print the report as JSON.")
     .option("--markdown", "Print the report as Markdown.")
     .option("--output <file>", "Save the report to a file.")
@@ -55,11 +61,34 @@ export function registerAnalyzeCommand(program: Command) {
       }
 
       const isExporting = Boolean(options.json || options.markdown || options.output);
-      const spinner = startSpinner("Analyzing project...", !isExporting);
+      const isGitHubSource = isGitHubRepositoryUrl(path);
+      const spinner = startSpinner("Analyzing project...", !isExporting && !isGitHubSource);
+      let source: AnalyzeSource | undefined;
 
       try {
-        const projectPath = resolveProjectPath(path);
-        const result = scanProject(projectPath);
+        if (isGitHubSource) {
+          if (!isExporting) {
+            console.log(formatReportLine(terminalColors.muted("Cloning repository...")));
+          }
+
+          source = createGitHubSource(path);
+
+          if (!isExporting) {
+            console.log(formatReportLine(terminalColors.muted("Analyzing repository...\n")));
+          }
+        } else {
+          source = createLocalSource(path);
+        }
+
+        const scanResult = scanProject(source.projectPath);
+        const result = {
+          ...scanResult,
+          source: {
+            type: source.type,
+            label: source.label,
+            repositoryUrl: source.type === "github" ? source.repositoryUrl : undefined,
+          },
+        };
         const healthScore = calculateHealthScore(result.projectHealth);
 
         spinner.stop();
@@ -82,6 +111,12 @@ export function registerAnalyzeCommand(program: Command) {
 
         printReportTitle("RepoLens Report");
         console.log(formatReportLine(`${terminalColors.muted("Project:")} ${result.projectPath}`));
+        console.log(formatReportLine(`${terminalColors.muted("Source:")} ${result.source.label}`));
+        if (result.source.repositoryUrl) {
+          console.log(
+            formatReportLine(`${terminalColors.muted("Repository:")} ${result.source.repositoryUrl}`),
+          );
+        }
 
         printSection("Health Score");
         console.log(formatReportLine(formatHealthScore(healthScore.score), 1));
@@ -177,6 +212,8 @@ export function registerAnalyzeCommand(program: Command) {
         }
 
         process.exit(1);
+      } finally {
+        source?.cleanup();
       }
     });
 }

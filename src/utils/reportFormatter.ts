@@ -4,6 +4,14 @@ import type { ProjectScanResult } from "./readProject.js";
 
 const TODO_FIXME_HEADING = `### ${"TODO"}/FIXME Items`;
 
+type ReportResult = ProjectScanResult & {
+  source?: {
+    type: "local" | "github";
+    label: string;
+    repositoryUrl?: string;
+  };
+};
+
 function escapeTableCell(value: string) {
   return value.split("|").join("\\|").replace(/\r?\n/g, " ");
 }
@@ -22,11 +30,11 @@ function formatCheckRows(checks: HealthCheckResult[]) {
   );
 }
 
-export function formatJsonReport(result: ProjectScanResult) {
+export function formatJsonReport(result: ReportResult) {
   return JSON.stringify(result, null, 2);
 }
 
-export function formatMarkdownReport(result: ProjectScanResult) {
+export function formatMarkdownReport(result: ReportResult) {
   const healthScore = calculateHealthScore(result.projectHealth);
   const lines: string[] = [
     "# RepoLens Report",
@@ -38,6 +46,10 @@ export function formatMarkdownReport(result: ProjectScanResult) {
     "| Metric | Value |",
     "|---|---:|",
     `| Project | ${formatInlineCode(result.projectPath)} |`,
+    `| Source | ${result.source?.label ?? "Local folder"} |`,
+    ...(result.source?.repositoryUrl
+      ? [`| Repository | ${formatInlineCode(result.source.repositoryUrl)} |`]
+      : []),
     `| Health Score | **${healthScore.score}%** |`,
     `| Files | ${result.totalFiles} |`,
     `| Folders | ${result.totalFolders} |`,
