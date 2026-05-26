@@ -1,0 +1,7 @@
+{
+  "largeFileThreshold": 100,
+  "maxStructureDepth": 4,
+  "maxEntriesPerFolder": 15,
+  "ignoredDirectories": ["node_modules", ".git", "dist", "coverage"],
+  "ignoredFiles": ["report.md", "report.json"]
+}

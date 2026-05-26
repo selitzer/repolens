@@ -1,16 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import { loadConfig } from "./config.js";
 import { checkProjectHealth } from "./projectHealth.js";
 import { buildProjectStructure } from "./projectStructure.js";
 import { detectStack } from "./stackDetector.js";
+import type { RepoLensConfigResult } from "./config.js";
 import type { ProjectHealthResult } from "./projectHealth.js";
-
-const IGNORED_DIRECTORIES = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  "coverage",
-]);
 
 const LANGUAGE_BY_EXTENSION = new Map([
   [".ts", "TypeScript"],
@@ -29,7 +24,6 @@ const LANGUAGE_BY_EXTENSION = new Map([
 ]);
 
 const TODO_PATTERN = /(?:\/\/|#|\/\*|\*|<!--)\s*(TODO|FIXME)\b/i;
-const LARGE_FILE_LINE_LIMIT = 300;
 const CODE_QUALITY_IGNORED_FILES = new Set(["package-lock.json"]);
 
 export type LanguageBreakdown = {
@@ -59,6 +53,7 @@ export type ProjectScanResult = {
   projectHealth: ProjectHealthResult;
   detectedStack: string[];
   projectStructure: string[];
+  config: RepoLensConfigResult;
 };
 
 export function resolveProjectPath(inputPath: string): string {
@@ -78,6 +73,10 @@ export function resolveProjectPath(inputPath: string): string {
 }
 
 export function scanProject(projectPath: string): ProjectScanResult {
+  const configResult = loadConfig(projectPath);
+  const config = configResult.config;
+  const ignoredDirectories = new Set(config.ignoredDirectories);
+  const ignoredFiles = new Set(config.ignoredFiles);
   let totalFiles = 0;
   let totalFolders = 0;
   let totalLines = 0;
@@ -96,7 +95,7 @@ export function scanProject(projectPath: string): ProjectScanResult {
   function scanCodeQuality(filePath: string, lines: string[]) {
     const fileName = path.basename(filePath);
 
-    if (CODE_QUALITY_IGNORED_FILES.has(fileName)) {
+    if (CODE_QUALITY_IGNORED_FILES.has(fileName) || ignoredFiles.has(fileName)) {
       return;
     }
 
@@ -112,7 +111,7 @@ export function scanProject(projectPath: string): ProjectScanResult {
       }
     });
 
-    if (lines.length > LARGE_FILE_LINE_LIMIT) {
+    if (lines.length > config.largeFileThreshold) {
       largeFiles.push({
         filePath: relativePath,
         lineCount: lines.length,
@@ -127,7 +126,7 @@ export function scanProject(projectPath: string): ProjectScanResult {
       const entryPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
-        if (IGNORED_DIRECTORIES.has(entry.name)) {
+        if (ignoredDirectories.has(entry.name)) {
           continue;
         }
 
@@ -137,6 +136,10 @@ export function scanProject(projectPath: string): ProjectScanResult {
       }
 
       if (entry.isFile()) {
+        if (ignoredFiles.has(entry.name)) {
+          continue;
+        }
+
         totalFiles++;
         trackLanguage(entryPath);
 
@@ -169,6 +172,7 @@ export function scanProject(projectPath: string): ProjectScanResult {
     largeFiles,
     projectHealth: checkProjectHealth(projectPath),
     detectedStack: detectStack(projectPath),
-    projectStructure: buildProjectStructure(projectPath),
+    projectStructure: buildProjectStructure(projectPath, config),
+    config: configResult,
   };
 }

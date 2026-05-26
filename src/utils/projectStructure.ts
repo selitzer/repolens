@@ -1,27 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { RepoLensConfig } from "./config.js";
 
-const IGNORED_DIRECTORIES = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  "coverage",
-]);
-
-const IGNORED_FILES = new Set([
-  "report.md",
-  "report.json",
-]);
-
-const MAX_DEPTH = 3;
-const MAX_ENTRIES_PER_FOLDER = 12;
-
-function shouldIgnoreEntry(entry: fs.Dirent) {
+function shouldIgnoreEntry(entry: fs.Dirent, config: RepoLensConfig) {
   if (entry.isDirectory()) {
-    return IGNORED_DIRECTORIES.has(entry.name);
+    return config.ignoredDirectories.includes(entry.name);
   }
 
-  return entry.isFile() && IGNORED_FILES.has(entry.name);
+  return entry.isFile() && config.ignoredFiles.includes(entry.name);
 }
 
 function sortEntries(entries: fs.Dirent[]) {
@@ -38,16 +24,16 @@ function sortEntries(entries: fs.Dirent[]) {
   });
 }
 
-export function buildProjectStructure(projectPath: string): string[] {
+export function buildProjectStructure(projectPath: string, config: RepoLensConfig): string[] {
   const lines: string[] = [];
 
   function walkDirectory(currentPath: string, depth: number) {
     const entries = sortEntries(
       fs.readdirSync(currentPath, { withFileTypes: true }).filter((entry) => {
-        return !shouldIgnoreEntry(entry);
+        return !shouldIgnoreEntry(entry, config);
       }),
     );
-    const visibleEntries = entries.slice(0, MAX_ENTRIES_PER_FOLDER);
+    const visibleEntries = entries.slice(0, config.maxEntriesPerFolder);
     const hiddenEntryCount = entries.length - visibleEntries.length;
 
     for (const entry of visibleEntries) {
@@ -57,7 +43,7 @@ export function buildProjectStructure(projectPath: string): string[] {
 
       lines.push(`${indentation}${displayName}`);
 
-      if (entry.isDirectory() && depth + 1 < MAX_DEPTH) {
+      if (entry.isDirectory() && depth + 1 < config.maxStructureDepth) {
         walkDirectory(entryPath, depth + 1);
       }
     }

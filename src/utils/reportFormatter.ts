@@ -43,6 +43,14 @@ export function formatMarkdownReport(result: ProjectScanResult) {
     `| Folders | ${result.totalFolders} |`,
     `| Lines of Code | ${result.totalLines} |`,
     "",
+    "## Configuration",
+    "",
+    "| File | Status |",
+    "|---|---|",
+    `| ${result.config.configFileName} | ${
+      result.config.configFileFound ? "Found" : "Not found, using defaults"
+    } |`,
+    "",
     "## Language Breakdown",
     "",
     "| Language | Files |",
@@ -82,7 +90,7 @@ export function formatMarkdownReport(result: ProjectScanResult) {
     "| Check | Result |",
     "|---|---:|",
     `| TODO/FIXME Comments | ${result.todos.length} |`,
-    `| Large Files Over 300 Lines | ${result.largeFiles.length} |`,
+    `| Large Files Over ${result.config.config.largeFileThreshold} Lines | ${result.largeFiles.length} |`,
   );
 
   if (result.todos.length > 0) {

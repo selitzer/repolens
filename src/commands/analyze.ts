@@ -124,6 +124,13 @@ export function registerAnalyzeCommand(program: Command) {
           formatReportLine(`Lines of Code: ${terminalColors.number(result.totalLines)}`, 1),
         );
 
+        printSection("Configuration");
+        if (result.config.configFileFound) {
+          printHealthStatusLine(true, result.config.configFileName);
+        } else {
+          printStatusLine(false, `${result.config.configFileName}: Not found, using defaults`);
+        }
+
         printSection("Language Breakdown");
         for (const item of result.languageBreakdown) {
           printBullet(
@@ -162,7 +169,7 @@ export function registerAnalyzeCommand(program: Command) {
           `${terminalColors.number(result.largeFiles.length)} ${pluralize(
             result.largeFiles.length,
             "file",
-          )} over 300 lines`,
+          )} over ${terminalColors.number(result.config.config.largeFileThreshold)} lines`,
         );
         for (const file of result.largeFiles.slice(0, RESULT_PREVIEW_LIMIT)) {
           printBullet(
